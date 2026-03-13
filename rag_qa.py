@@ -1,5 +1,5 @@
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
 from ingest import load_and_chunk_pdf
 from dotenv import load_dotenv
@@ -14,7 +14,6 @@ def build_vector_store():
     embeddings = OpenAIEmbeddings()
     vector_store = FAISS.from_documents(chunks, embeddings)
     return vector_store
-
 
 def get_rag_answer(query, vector_store, k=3):
     # 1. Retrieve relevant chunks
@@ -32,8 +31,7 @@ If the answer is not present in the context, say "I don't know based on the give
 Context:
 {context}
 
-Question:
-{question}
+Question: {question}
 
 Answer:
 """
