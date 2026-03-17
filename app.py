@@ -1,12 +1,15 @@
 import streamlit as st
 from ingest import load_and_chunk_pdf
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.prompts import PromptTemplate
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
 import os
 import tempfile
 
-os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+load_dotenv()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 st.set_page_config(page_title="RAG Document Assistant", layout="wide")
 st.title("📄 RAG-powered Document Q&A Assistant")
@@ -16,7 +19,7 @@ uploaded_file = st.file_uploader("Upload a PDF document", type="pdf")
 @st.cache_resource
 def create_vector_store_from_pdf(pdf_path):
     chunks = load_and_chunk_pdf(pdf_path)
-    embeddings = OpenAIEmbeddings()
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     return FAISS.from_documents(chunks, embeddings)
 
 def ask_question(query, vector_store):
@@ -39,7 +42,7 @@ Answer:
         input_variables=["context", "question"]
     )
 
-    llm = ChatOpenAI(temperature=0)
+    llm = ChatGroq(model="llama3-8b-8192", temperature=0, api_key=GROQ_API_KEY)
     response = llm.invoke(prompt.format(context=context, question=query))
     return response.content, docs
 
